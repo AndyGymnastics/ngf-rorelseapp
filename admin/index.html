@@ -292,12 +292,15 @@ async function login() {
     
     // Load actual data.json from server to sync with what users see
     try {
-      const res = await fetch('../data/data.json');
-      if (!res.ok) throw new Error('Failed to load data.json');
+      console.log('🔄 Loading data from server...');
+      // Use absolute path from root
+      const dataUrl = '/data/data.json';
+      const res = await fetch(dataUrl);
+      if (!res.ok) throw new Error('Failed to load data.json: ' + res.status);
       state.data = await res.json();
-      console.log('✅ Loaded data from server');
+      console.log('✅ Loaded data from server:', { passCount: state.data.pass?.length || 0, ovningarCount: state.data.ovningar?.length || 0 });
     } catch (e) {
-      console.warn('Failed to load from server, using cached/mock:', e);
+      console.error('❌ Failed to load from server:', e);
       state.data = getSavedData() || cloneMockData();
     }
     
@@ -417,7 +420,7 @@ function renderPassDetail(passId) {
       </div>
     `;
   }).join('');
-  return `
+  const html = `
     <button class="back-link" data-action="back-to-pass">← Tillbaka till pass</button>
     <div class="page-header">
       <div>
@@ -433,13 +436,13 @@ function renderPassDetail(passId) {
       <div class="card-header">Passinformation</div>
       <div class="pass-detail-form" style="padding:16px">
         <div class="form-grid-3">
-          <div class="form-field"><label>Namn (sv)</label><input class="pass-input-name" value="${pass.namn.sv}" /></div>
-          <div class="form-field"><label>Kategori</label><input class="pass-input-category" value="${pass.kategori}" /></div>
-          <div class="form-field"><label>Nivå</label><input class="pass-input-level" value="${pass.niva}" /></div>
+          <div class="form-field"><label>Namn (sv)</label><input class="pass-input-name" /></div>
+          <div class="form-field"><label>Kategori</label><input class="pass-input-category" /></div>
+          <div class="form-field"><label>Nivå</label><input class="pass-input-level" /></div>
         </div>
         <div class="form-grid-3" style="margin-top:12px">
-          <div class="form-field"><label>Tid (min)</label><input class="pass-input-time" type="number" value="${pass.tid}" /></div>
-          <div class="form-field"><label>Emoji</label><input class="pass-input-emoji" value="${pass.emoji}" maxlength="2" /></div>
+          <div class="form-field"><label>Tid (min)</label><input class="pass-input-time" type="number" /></div>
+          <div class="form-field"><label>Emoji</label><input class="pass-input-emoji" maxlength="2" /></div>
           <div></div>
         </div>
         <div style="margin-top:10px;text-align:right">
@@ -454,6 +457,20 @@ function renderPassDetail(passId) {
       ${rows || '<div style="padding:16px;color:#6B6860;font-size:0.85rem">Inga övningar ännu.</div>'}
     </div>
   `;
+
+  // Set values programmatically to ensure Swedish characters display correctly
+  setTimeout(() => {
+    const form = document.querySelector('.pass-detail-form');
+    if (form) {
+      form.querySelector('.pass-input-name').value = pass.namn.sv;
+      form.querySelector('.pass-input-category').value = pass.kategori;
+      form.querySelector('.pass-input-level').value = pass.niva;
+      form.querySelector('.pass-input-time').value = pass.tid;
+      form.querySelector('.pass-input-emoji').value = pass.emoji;
+    }
+  }, 0);
+
+  return html;
 }
 
 function renderOvningar() {
@@ -686,14 +703,15 @@ function showPassModal() {
 
 function showOvningModal(id = null) {
   const ov = id ? state.data.ovningar.find(o => o.id === id) : null;
+  console.log('Opening ovning modal for:', id, 'found:', !!ov, 'name:', ov?.namn?.sv);
   const m = modal(`
     <div class="modal-title">${ov ? 'Redigera övning' : 'Ny övning'}</div>
     <div class="form-group">
-      <div class="form-field"><label>Namn (svenska)</label><input class="input-ov-name-sv" value="${ov?.namn.sv || ''}" placeholder="T.ex. Axelrullningar" /></div>
-      <div class="form-field"><label>Namn (engelska)</label><input class="input-ov-name-en" value="${ov?.namn.en || ''}" placeholder="E.g. Shoulder Rolls" /></div>
-      <div class="form-field"><label>Video-URL (Google Drive)</label><input class="input-ov-video" type="url" value="${ov?.video || ''}" placeholder="https://drive.google.com/file/d/..." /></div>
+      <div class="form-field"><label>Namn (svenska)</label><input class="input-ov-name-sv" placeholder="T.ex. Axelrullningar" /></div>
+      <div class="form-field"><label>Namn (engelska)</label><input class="input-ov-name-en" placeholder="E.g. Shoulder Rolls" /></div>
+      <div class="form-field"><label>Video-URL (Google Drive)</label><input class="input-ov-video" type="url" placeholder="https://drive.google.com/file/d/..." /></div>
       <div class="checkbox-row">
-        <input type="checkbox" id="cb-loop" ${ov?.loop ? 'checked' : ''} />
+        <input type="checkbox" id="cb-loop" />
         <label for="cb-loop">Repetera övningen (loop)</label>
       </div>
     </div>
@@ -702,6 +720,14 @@ function showOvningModal(id = null) {
       <button class="btn btn-primary" id="m-save">${ov ? 'Spara ändringar' : 'Skapa övning'}</button>
     </div>
   `);
+
+  // Set values programmatically to ensure Swedish characters display correctly
+  if (ov) {
+    m.querySelector('.input-ov-name-sv').value = ov.namn?.sv || '';
+    m.querySelector('.input-ov-name-en').value = ov.namn?.en || '';
+    m.querySelector('.input-ov-video').value = ov.video || '';
+    m.querySelector('#cb-loop').checked = ov.loop || false;
+  }
   m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
   m.querySelector('#m-save').addEventListener('click', () => {
     const nameSv = m.querySelector('.input-ov-name-sv').value.trim();
