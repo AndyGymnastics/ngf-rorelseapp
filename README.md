@@ -29,23 +29,6 @@ ngf-rorelseapp/
     └── index.html      # Adminverktyg (separat, kräver GitHub-token)
 ```
 
-## Kom igång
-
-### 1. Skapa repository
-
-```bash
-git clone https://github.com/AndyGymnastics/ngf-rorelseapp.git
-cd ngf-rorelseapp
-```
-
-### 2. Kopiera filerna
-
-Kopiera alla filer från detta projekt till ditt repository.
-
-### 3. Aktivera GitHub Pages
-
-GitHub → repository → Settings → Pages → Branch: main → / (root) → Save.
-
 Din app är nu live på:
 `https://andygymnastics.github.io/ngf-rorelseapp/`
 
