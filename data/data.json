@@ -10,7 +10,12 @@
       "tid": 8,
       "emoji": "🧘",
       "aktiv": false,
-      "ovningar": []
+      "ovningar": [
+        {
+          "ovningId": "ov-001",
+          "varde": "2:00"
+        }
+      ]
     },
     {
       "id": "pass-001",
