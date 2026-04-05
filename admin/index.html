@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NGF Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'Helvetica Neue', sans-serif; background: #F4F3F0; color: #1A1A1A; font-size: 15px; }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea, select { font-family: inherit; }
+
+    /* Layout */
+    .shell { display: flex; min-height: 100vh; }
+    .sidebar { width: 220px; background: #fff; border-right: 1px solid #E4E2DE; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; }
+    .main { flex: 1; margin-left: 220px; padding: 32px 36px; max-width: calc(100vw - 220px); }
+    .sidebar-logo { padding: 20px 20px 16px; border-bottom: 1px solid #E4E2DE; }
+    .sidebar-logo h1 { font-size: 0.95rem; font-weight: 800; }
+    .sidebar-logo p { font-size: 0.72rem; color: #6B6860; margin-top: 2px; }
+    .nav-items { flex: 1; padding: 8px 0; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; font-size: 0.88rem; font-weight: 500; color: #6B6860; border-right: 3px solid transparent; transition: all 0.15s; }
+    .nav-item:hover { background: #F4F3F0; color: #1A1A1A; }
+    .nav-item.active { font-weight: 700; color: #2D6A4F; background: #E8F4EF; border-right-color: #2D6A4F; }
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid #E4E2DE; }
+    .sidebar-footer .user { font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; }
+    .sidebar-footer .logout { background: none; border: none; color: #D32F2F; font-size: 0.78rem; cursor: pointer; padding: 0; }
+
+    /* Page header */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+    .page-title { font-size: 1.5rem; font-weight: 800; }
+    .page-sub { font-size: 0.85rem; color: #6B6860; margin-top: 2px; }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .stat-card { background: #fff; border-radius: 14px; border: 1px solid #E4E2DE; padding: 18px; }
+    .stat-icon { font-size: 1.5rem; margin-bottom: 6px; }
+    .stat-val { font-size: 1.6rem; font-weight: 800; }
+    .stat-label { font-size: 0.78rem; color: #6B6860; margin-top: 2px; }
+
+    /* Card / Table */
+    .card { background: #fff; border-radius: 14px; border: 1px solid #E4E2DE; overflow: hidden; margin-bottom: 20px; }
+    .card-header { padding: 14px 16px; border-bottom: 1px solid #E4E2DE; font-weight: 700; font-size: 0.9rem; }
+    .tbl-head, .tbl-row { display: grid; padding: 10px 16px; align-items: center; }
+    .tbl-head { background: #F9F8F6; border-bottom: 1px solid #E4E2DE; font-size: 0.72rem; font-weight: 700; color: #6B6860; letter-spacing: 0.05em; text-transform: uppercase; }
+    .tbl-row { border-bottom: 1px solid #E4E2DE; font-size: 0.85rem; }
+    .tbl-row:last-child { border-bottom: none; }
+
+    /* Buttons */
+    .btn { border-radius: 8px; padding: 7px 14px; font-size: 0.82rem; font-weight: 600; border: none; transition: opacity 0.15s; }
+    .btn:active { opacity: 0.8; }
+    .btn-primary { background: #2D6A4F; color: #fff; }
+    .btn-secondary { background: #F9F8F6; color: #1A1A1A; border: 1px solid #E4E2DE; }
+    .btn-danger { background: #D32F2F; color: #fff; }
+    .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+    .badge-green { background: #E8F4EF; color: #2D6A4F; }
+    .badge-orange { background: #FFF3E0; color: #E65100; }
+
+    /* Form */
+    .form-group { display: flex; flex-direction: column; gap: 12px; }
+    .form-field { display: flex; flex-direction: column; gap: 4px; }
+    .form-field label { font-size: 0.78rem; font-weight: 600; color: #6B6860; }
+    .form-field input, .form-field select, .form-field textarea { border: 1px solid #E4E2DE; border-radius: 8px; padding: 8px 12px; font-size: 0.88rem; color: #1A1A1A; outline: none; background: #fff; }
+    .form-field input:focus, .form-field select:focus { border-color: #2D6A4F; }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+    .modal { background: #fff; border-radius: 16px; padding: 28px; width: 480px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .modal.sm { width: 360px; text-align: center; }
+    .modal-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 18px; }
+    .modal-btns { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+    .modal.sm .modal-btns { justify-content: center; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #2D6A4F; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 200; animation: slideUp 0.2s ease; }
+    @keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    /* Info box */
+    .info-box { background: #E8F4EF; border: 1px solid #2D6A4F44; border-radius: 12px; padding: 12px 16px; font-size: 0.82rem; color: #2D6A4F; margin-bottom: 16px; }
+
+    /* Color swatch */
+    .swatch { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #E4E2DE; display: inline-block; }
+
+    /* Color picker row */
+    .color-row { display: flex; align-items: center; justify-content: space-between; }
+    .color-row label { font-size: 0.82rem; font-weight: 500; }
+    .color-inputs { display: flex; align-items: center; gap: 8px; }
+    .color-inputs input[type="color"] { width: 36px; height: 32px; border-radius: 6px; border: 1px solid #E4E2DE; cursor: pointer; padding: 2px; }
+    .color-inputs input[type="text"] { width: 90px; border: 1px solid #E4E2DE; border-radius: 8px; padding: 6px 8px; font-size: 0.82rem; }
+
+    /* Back link */
+    .back-link { background: none; border: none; color: #2D6A4F; font-size: 0.85rem; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 8px; display: block; }
+
+    /* History log */
+    .log-row { padding: 11px 16px; border-bottom: 1px solid #E4E2DE; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+    .log-row:last-child { border-bottom: none; }
+
+    /* Login */
+    .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F4F3F0; }
+    .login-card { background: #fff; border-radius: 20px; padding: 40px; width: 380px; box-shadow: 0 8px 40px rgba(0,0,0,0.1); border: 1px solid #E4E2DE; }
+    .login-icon { font-size: 2rem; text-align: center; margin-bottom: 8px; }
+    .login-title { font-size: 1.3rem; font-weight: 800; text-align: center; margin-bottom: 4px; }
+    .login-sub { font-size: 0.82rem; color: #6B6860; text-align: center; margin-bottom: 24px; }
+    .login-help { font-size: 0.72rem; color: #6B6860; text-align: center; margin-top: 14px; line-height: 1.6; }
+    .error-msg { font-size: 0.75rem; color: #D32F2F; margin-top: 4px; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page" class="login-page">
+  <div class="login-card">
+    <div class="login-icon">🔐</div>
+    <div class="login-title">NGF Admin</div>
+    <div class="login-sub">Logga in med ditt GitHub-token</div>
+    <div class="form-field" style="margin-bottom:14px">
+      <label for="token-input">GitHub Personal Access Token</label>
+      <input id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" style="font-family:monospace" />
+      <div class="error-msg hidden" id="token-error">Ogiltigt token. Prova att skriva "demo" för testläge.</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:10px;font-size:0.9rem" id="btn-login">Logga in</button>
+    <div class="login-help">
+      Token skapas på GitHub → Settings → Developer settings →<br>
+      Personal access tokens → Generate new token (classic).<br>
+      Behörighet: <code>repo</code>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app-shell" class="shell hidden">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>NGF Admin</h1>
+      <p>Nynäshamns GF</p>
+    </div>
+    <nav class="nav-items" id="sidebar-nav">
+      <div class="nav-item active" data-section="oversikt">📊 Översikt</div>
+      <div class="nav-item" data-section="pass">📋 Pass</div>
+      <div class="nav-item" data-section="ovningar">🏃 Övningsbibliotek</div>
+      <div class="nav-item" data-section="teman">🎨 Teman</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user" id="sidebar-user">AndyGymnastics</div>
+      <button class="logout" id="btn-logout">Logga ut</button>
+    </div>
+  </aside>
+  <main class="main" id="main-content"></main>
+</div>
+
+<script>
+// ── State ─────────────────────────────────
+let state = {
+  token: null,
+  section: 'oversikt',
+  subSection: null, // e.g. pass id for editing
+  data: null
+};
+
+// ── Mock data (replace with GitHub API fetch) ──
+const MOCK_DATA = {
+  pass: [
+    { id: 'pass-001', namn: { sv: 'Övre kropp – lossa upp' }, kategori: 'Rörlighet', niva: 'Lätt', tid: 10, emoji: '🙆', aktiv: true, ovningar: [{ ovningId: 'ov-001', varde: '1:00' }] },
+    { id: 'pass-002', namn: { sv: 'Höft & ben' }, kategori: 'Rörlighet', niva: 'Medel', tid: 15, emoji: '🦵', aktiv: true, ovningar: [] },
+    { id: 'pass-003', namn: { sv: 'Morgonväckare' }, kategori: 'Rörlighet', niva: 'Lätt', tid: 8, emoji: '🌅', aktiv: true, ovningar: [] },
+    { id: 'pass-004', namn: { sv: 'Axelstyrka' }, kategori: 'Styrka', niva: 'Medel', tid: 20, emoji: '💪', aktiv: false, ovningar: [] },
+  ],
+  ovningar: [
+    { id: 'ov-001', namn: { sv: 'Axelrullningar' }, video: 'https://drive.google.com/...', loop: true },
+    { id: 'ov-002', namn: { sv: 'Armsvingar' }, video: '', loop: false },
+    { id: 'ov-003', namn: { sv: 'Sidoböjning' }, video: 'https://drive.google.com/...', loop: true },
+    { id: 'ov-004', namn: { sv: 'Bröstöppnare' }, video: '', loop: false },
+    { id: 'ov-005', namn: { sv: 'Höftböjarsträck' }, video: 'https://drive.google.com/...', loop: false },
+  ],
+  teman: [
+    { key: 'light', namn: { sv: 'Ljust' }, las: true },
+    { key: 'dark', namn: { sv: 'Mörkt' }, las: true },
+    { key: 'auto', namn: { sv: 'Auto' }, las: true },
+    { key: 'pink', namn: { sv: 'Rosa' }, las: false },
+  ]
+};
+
+// ── Login ─────────────────────────────────
+document.getElementById('btn-login').addEventListener('click', login);
+document.getElementById('token-input').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+function login() {
+  const token = document.getElementById('token-input').value.trim();
+  if (token.startsWith('ghp_') || token === 'demo') {
+    state.token = token;
+    state.data = MOCK_DATA;
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('app-shell').classList.remove('hidden');
+    document.getElementById('sidebar-user').textContent = token === 'demo' ? 'Demo-läge' : 'AndyGymnastics';
+    navigate('oversikt');
+  } else {
+    document.getElementById('token-error').classList.remove('hidden');
+  }
+}
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  state.token = null;
+  document.getElementById('app-shell').classList.add('hidden');
+  document.getElementById('login-page').classList.remove('hidden');
+  document.getElementById('token-input').value = '';
+});
+
+// ── Navigation ────────────────────────────
+document.getElementById('sidebar-nav').addEventListener('click', e => {
+  const item = e.target.closest('[data-section]');
+  if (item) navigate(item.dataset.section);
+});
+
+function navigate(section, sub = null) {
+  state.section = section;
+  state.subSection = sub;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.section === section);
+  });
+  renderSection();
+}
+
+function renderSection() {
+  const main = document.getElementById('main-content');
+  switch (state.section) {
+    case 'oversikt':   main.innerHTML = renderOversikt(); break;
+    case 'pass':       main.innerHTML = state.subSection ? renderPassDetail(state.subSection) : renderPass(); break;
+    case 'ovningar':   main.innerHTML = renderOvningar(); break;
+    case 'teman':      main.innerHTML = renderTeman(); break;
+  }
+  attachSectionEvents();
+}
+
+// ── Översikt ──────────────────────────────
+function renderOversikt() {
+  const { pass, ovningar, teman } = state.data;
+  const pub = pass.filter(p => p.aktiv).length;
+  return `
+    <div class="page-header">
+      <div><div class="page-title">Översikt</div><div class="page-sub">Nynäshamns GF · Rörelseapp</div></div>
+    </div>
+    <div class="stats-grid">
+      ${statCard('📋', pass.length, 'Pass totalt', null)}
+      ${statCard('✅', pub, 'Publicerade', '#2D6A4F')}
+      ${statCard('⚠️', pass.length - pub, 'Opublicerade', '#E65100')}
+      ${statCard('🏃', ovningar.length, 'Övningar i biblioteket', null)}
+    </div>
+    <div class="card">
+      <div class="card-header">Senaste ändringar</div>
+      ${['Anders · Lade till pass "Bål & core" · Idag 09:14',
+         'Anders · Uppdaterade video för Axelrullningar · Igår 14:32',
+         'Anders · Skapade tema Rosa · Mån 31 mar']
+        .map(row => {
+          const [vem, vad, nar] = row.split(' · ');
+          return `<div class="log-row"><span><b>${vem}</b> ${vad}</span><span style="color:#6B6860;font-size:0.75rem">${nar}</span></div>`;
+        }).join('')}
+    </div>
+  `;
+}
+
+function statCard(icon, val, label, color) {
+  return `<div class="stat-card"><div class="stat-icon">${icon}</div><div class="stat-val" style="${color ? `color:${color}` : ''}">${val}</div><div class="stat-label">${label}</div></div>`;
+}
+
+// ── Pass ──────────────────────────────────
+function renderPass() {
+  const rows = state.data.pass.map(p => `
+    <div class="tbl-row" style="grid-template-columns:2fr 1fr 1fr 1fr 90px 120px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span>${p.emoji}</span>
+        <div><div style="font-weight:600">${p.namn.sv}</div><div style="font-size:0.72rem;color:#6B6860">${p.tid} min</div></div>
+      </div>
+      <span>${p.kategori}</span>
+      <span>${p.niva}</span>
+      <span>${p.ovningar.length} st</span>
+      <span><span class="badge ${p.aktiv ? 'badge-green' : 'badge-orange'}">${p.aktiv ? 'Publik' : 'Utkast'}</span></span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" data-action="edit-pass" data-id="${p.id}">Redigera</button>
+        <button class="btn btn-danger btn-sm" data-action="delete-pass" data-id="${p.id}">✕</button>
+      </div>
+    </div>
+  `).join('');
+  return `
+    <div class="page-header">
+      <div><div class="page-title">Pass</div><div class="page-sub">${state.data.pass.length} pass totalt</div></div>
+      <button class="btn btn-primary" data-action="new-pass">+ Nytt pass</button>
+    </div>
+    <div class="card">
+      <div class="tbl-head" style="grid-template-columns:2fr 1fr 1fr 1fr 90px 120px">
+        <span>Pass</span><span>Kategori</span><span>Nivå</span><span>Övningar</span><span>Status</span><span></span>
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+function renderPassDetail(passId) {
+  const pass = state.data.pass.find(p => p.id === passId);
+  if (!pass) return renderPass();
+  const rows = pass.ovningar.map((item, i) => {
+    const ov = state.data.ovningar.find(o => o.id === item.ovningId);
+    return `
+      <div class="tbl-row" style="grid-template-columns:2fr 1fr 80px 1fr 80px">
+        <span style="font-weight:600">${ov?.namn.sv || item.ovningId}</span>
+        <span style="color:#6B6860">${item.varde}</span>
+        <span>${ov?.loop ? '✅' : '—'}</span>
+        <span>${ov?.video ? '<span class="badge badge-green">Länkad</span>' : '<span class="badge badge-orange">Saknas</span>'}</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" data-action="edit-ovning-in-pass" data-index="${i}">✏️</button>
+          <button class="btn btn-danger btn-sm" data-action="remove-ovning-from-pass" data-index="${i}">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <button class="back-link" data-action="back-to-pass">← Tillbaka till pass</button>
+    <div class="page-header">
+      <div>
+        <div class="page-title">${pass.emoji} ${pass.namn.sv}</div>
+        <div class="page-sub">${pass.ovningar.length} övningar · ${pass.tid} min</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary" data-action="toggle-pass-status" data-id="${pass.id}">${pass.aktiv ? 'Avpublicera' : 'Publicera'}</button>
+        <button class="btn btn-primary" data-action="add-ovning-to-pass">+ Övning</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">Passinformation</div>
+      <div style="padding:16px">
+        <div class="form-grid-3">
+          <div class="form-field"><label>Namn (sv)</label><input value="${pass.namn.sv}" /></div>
+          <div class="form-field"><label>Kategori</label><input value="${pass.kategori}" /></div>
+          <div class="form-field"><label>Nivå</label><input value="${pass.niva}" /></div>
+        </div>
+        <div style="margin-top:10px;text-align:right">
+          <button class="btn btn-primary" data-action="save-pass-info">Spara</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-head" style="grid-template-columns:2fr 1fr 80px 1fr 80px">
+        <span>Övning</span><span>Tid / Reps</span><span>Loop</span><span>Video</span><span></span>
+      </div>
+      ${rows || '<div style="padding:16px;color:#6B6860;font-size:0.85rem">Inga övningar ännu.</div>'}
+    </div>
+  `;
+}
+
+// ── Övningsbibliotek ──────────────────────
+function renderOvningar() {
+  const rows = state.data.ovningar.map(ov => `
+    <div class="tbl-row" style="grid-template-columns:2fr 80px 1fr 100px">
+      <span style="font-weight:600">${ov.namn.sv}</span>
+      <span>${ov.loop ? '✅' : '—'}</span>
+      <span>${ov.video ? '<span class="badge badge-green">Länkad</span>' : '<span class="badge badge-orange">Saknas</span>'}</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-secondary btn-sm" data-action="edit-ovning" data-id="${ov.id}">✏️ Redigera</button>
+        <button class="btn btn-danger btn-sm" data-action="delete-ovning" data-id="${ov.id}">✕</button>
+      </div>
+    </div>
+  `).join('');
+  return `
+    <div class="page-header">
+      <div><div class="page-title">Övningsbibliotek</div><div class="page-sub">${state.data.ovningar.length} övningar</div></div>
+      <button class="btn btn-primary" data-action="new-ovning">+ Ny övning</button>
+    </div>
+    <div class="info-box">💡 Övningar i biblioteket kan återanvändas i flera pass. Redigerar du en övning här uppdateras den i alla pass som använder den.</div>
+    <div class="card">
+      <div class="tbl-head" style="grid-template-columns:2fr 80px 1fr 100px">
+        <span>Övning</span><span>Loop</span><span>Video</span><span></span>
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+// ── Teman ─────────────────────────────────
+function renderTeman() {
+  const rows = state.data.teman.map(tema => `
+    <div class="tbl-row" style="grid-template-columns:2fr 60px 1fr 120px">
+      <span style="font-weight:600">${tema.namn.sv}</span>
+      <span class="badge ${tema.las ? 'badge-orange' : 'badge-green'}">${tema.las ? 'Låst' : 'Anpassat'}</span>
+      <span>${tema.las ? '<span style="color:#6B6860;font-size:0.82rem">Kan ej ändras</span>' : '<span class="badge badge-green">Aktiv</span>'}</span>
+      <div style="display:flex;gap:6px">
+        ${!tema.las ? `<button class="btn btn-secondary btn-sm" data-action="edit-tema" data-key="${tema.key}">✏️</button>
+        <button class="btn btn-danger btn-sm" data-action="delete-tema" data-key="${tema.key}">✕</button>` : '<span style="color:#6B6860;font-size:0.78rem">Systemtema</span>'}
+      </div>
+    </div>
+  `).join('');
+  return `
+    <div class="page-header">
+      <div><div class="page-title">Teman</div><div class="page-sub">Ljust, Mörkt och Auto är systemteman och kan inte ändras.</div></div>
+      <button class="btn btn-primary" data-action="new-tema">+ Nytt tema</button>
+    </div>
+    <div class="info-box">💡 Om ett anpassat tema tas bort återgår användare som hade det aktivt automatiskt till temat Ljust.</div>
+    <div class="card">
+      <div class="tbl-head" style="grid-template-columns:2fr 60px 1fr 120px">
+        <span>Tema</span><span>Typ</span><span>Status</span><span></span>
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+// ── Event delegation ──────────────────────
+function attachSectionEvents() {
+  document.getElementById('main-content').addEventListener('click', handleAction);
+}
+
+function handleAction(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+
+  switch (action) {
+    case 'new-pass':        showPassModal(); break;
+    case 'edit-pass':       navigate('pass', el.dataset.id); break;
+    case 'back-to-pass':    navigate('pass'); break;
+    case 'delete-pass':     showConfirmModal('Är du säker?', 'Passet och alla dess övningar tas bort permanent.', () => toast('Pass borttaget.')); break;
+    case 'toggle-pass-status': toast('Status uppdaterad och publicerad.'); break;
+    case 'save-pass-info':  toast('Passinformation sparad.'); break;
+    case 'add-ovning-to-pass': showAddOvningModal(); break;
+    case 'new-ovning':      showOvningModal(); break;
+    case 'edit-ovning':     showOvningModal(el.dataset.id); break;
+    case 'delete-ovning':   showConfirmModal('Ta bort övning?', 'Övningen tas bort från biblioteket och alla pass som använder den.', () => toast('Övning borttagen.')); break;
+    case 'new-tema':        showTemaModal(); break;
+    case 'edit-tema':       showTemaModal(el.dataset.key); break;
+    case 'delete-tema':     showConfirmModal('Ta bort tema?', 'Temat tas bort. Användare som hade det aktivt återgår till Ljust.', () => toast('Tema borttaget.')); break;
+  }
+}
+
+// ── Modals ────────────────────────────────
+function modal(content, sm = false) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal${sm ? ' sm' : ''}">${content}</div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function showConfirmModal(title, body, onConfirm) {
+  const m = modal(`
+    <div style="text-align:center">
+      <div style="font-size:2rem;margin-bottom:10px">⚠️</div>
+      <div class="modal-title">${title}</div>
+      <div style="font-size:0.85rem;color:#6B6860;margin-bottom:16px;line-height:1.5">${body}</div>
+      <div class="modal-btns" style="justify-content:center">
+        <button class="btn btn-secondary" style="flex:1" id="m-cancel">Avbryt</button>
+        <button class="btn btn-danger" style="flex:1" id="m-confirm">Ta bort</button>
+      </div>
+    </div>
+  `, true);
+  m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
+  m.querySelector('#m-confirm').addEventListener('click', () => { m.remove(); onConfirm(); });
+}
+
+function showPassModal() {
+  const m = modal(`
+    <div class="modal-title">Nytt pass</div>
+    <div class="form-group">
+      <div class="form-field"><label>Namn (svenska)</label><input placeholder="T.ex. Ryggsträck" /></div>
+      <div class="form-grid-2">
+        <div class="form-field"><label>Kategori</label>
+          <select><option>Rörlighet</option><option>Styrka</option></select>
+        </div>
+        <div class="form-field"><label>Nivå</label>
+          <select><option>Lätt</option><option>Medel</option><option>Avancerad</option></select>
+        </div>
+      </div>
+      <div class="form-field"><label>Uppskattad tid (minuter)</label><input type="number" placeholder="10" /></div>
+      <div class="form-field"><label>Emoji</label><input placeholder="🙆" maxlength="2" /></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" id="m-cancel">Avbryt</button>
+      <button class="btn btn-primary" id="m-save">Skapa pass</button>
+    </div>
+  `);
+  m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
+  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast('Pass skapat som utkast.'); });
+}
+
+function showOvningModal(id = null) {
+  const ov = id ? state.data.ovningar.find(o => o.id === id) : null;
+  const m = modal(`
+    <div class="modal-title">${ov ? 'Redigera övning' : 'Ny övning'}</div>
+    <div class="form-group">
+      <div class="form-field"><label>Namn (svenska)</label><input value="${ov?.namn.sv || ''}" placeholder="T.ex. Axelrullningar" /></div>
+      <div class="form-field"><label>Namn (engelska)</label><input value="${ov?.namn.en || ''}" placeholder="E.g. Shoulder Rolls" /></div>
+      <div class="form-field"><label>Video-URL (Google Drive)</label><input type="url" value="${ov?.video || ''}" placeholder="https://drive.google.com/file/d/..." /></div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="cb-loop" ${ov?.loop ? 'checked' : ''} />
+        <label for="cb-loop">Repetera övningen (loop)</label>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" id="m-cancel">Avbryt</button>
+      <button class="btn btn-primary" id="m-save">${ov ? 'Spara ändringar' : 'Skapa övning'}</button>
+    </div>
+  `);
+  m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
+  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast(ov ? 'Övning uppdaterad.' : 'Övning skapad.'); });
+}
+
+function showAddOvningModal() {
+  const opts = state.data.ovningar.map(o => `<option value="${o.id}">${o.namn.sv}</option>`).join('');
+  const m = modal(`
+    <div class="modal-title">Lägg till övning i pass</div>
+    <div class="form-group">
+      <div class="form-field"><label>Välj övning</label><select>${opts}</select></div>
+      <div class="form-field"><label>Tid / Reps</label><input placeholder="T.ex. 1:00 eller 3 × 12 reps" /></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" id="m-cancel">Avbryt</button>
+      <button class="btn btn-primary" id="m-save">Lägg till</button>
+    </div>
+  `);
+  m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
+  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast('Övning tillagd i passet.'); });
+}
+
+function showTemaModal(key = null) {
+  const m = modal(`
+    <div class="modal-title">${key ? 'Redigera tema' : 'Nytt tema'}</div>
+    <div class="form-group">
+      <div class="form-field"><label>Namn (svenska)</label><input placeholder="T.ex. Höst" /></div>
+      <div class="form-field"><label>Namn (engelska)</label><input placeholder="E.g. Autumn" /></div>
+      ${['Accentfärg','Bakgrundsfärg','Ytfärg','Textfärg'].map(l => `
+        <div class="color-row">
+          <label>${l}</label>
+          <div class="color-inputs">
+            <input type="color" value="#2D6A4F" />
+            <input type="text" value="#2D6A4F" />
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" id="m-cancel">Avbryt</button>
+      <button class="btn btn-primary" id="m-save">${key ? 'Spara ändringar' : 'Skapa tema'}</button>
+    </div>
+  `);
+  m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
+  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast(key ? 'Tema uppdaterat.' : 'Tema skapat och tillgängligt i appen.'); });
+}
+
+// ── Toast ─────────────────────────────────
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = '✓ ' + msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2800);
+}
+</script>
+</body>
+</html>
