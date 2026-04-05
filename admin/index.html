@@ -157,45 +157,75 @@
 
 <script>
 // ── State ─────────────────────────────────
+const STORAGE_KEY = 'ngf_admin_data';
 let state = {
   token: null,
   section: 'oversikt',
-  subSection: null, // e.g. pass id for editing
+  subSection: null,
   data: null
 };
 
-// ── Mock data (replace with GitHub API fetch) ──
 const MOCK_DATA = {
   pass: [
     { id: 'pass-001', namn: { sv: 'Övre kropp – lossa upp' }, kategori: 'Rörlighet', niva: 'Lätt', tid: 10, emoji: '🙆', aktiv: true, ovningar: [{ ovningId: 'ov-001', varde: '1:00' }] },
     { id: 'pass-002', namn: { sv: 'Höft & ben' }, kategori: 'Rörlighet', niva: 'Medel', tid: 15, emoji: '🦵', aktiv: true, ovningar: [] },
     { id: 'pass-003', namn: { sv: 'Morgonväckare' }, kategori: 'Rörlighet', niva: 'Lätt', tid: 8, emoji: '🌅', aktiv: true, ovningar: [] },
-    { id: 'pass-004', namn: { sv: 'Axelstyrka' }, kategori: 'Styrka', niva: 'Medel', tid: 20, emoji: '💪', aktiv: false, ovningar: [] },
+    { id: 'pass-004', namn: { sv: 'Axelstyrka' }, kategori: 'Styrka', niva: 'Medel', tid: 20, emoji: '💪', aktiv: false, ovningar: [] }
   ],
   ovningar: [
     { id: 'ov-001', namn: { sv: 'Axelrullningar' }, video: 'https://drive.google.com/...', loop: true },
     { id: 'ov-002', namn: { sv: 'Armsvingar' }, video: '', loop: false },
     { id: 'ov-003', namn: { sv: 'Sidoböjning' }, video: 'https://drive.google.com/...', loop: true },
     { id: 'ov-004', namn: { sv: 'Bröstöppnare' }, video: '', loop: false },
-    { id: 'ov-005', namn: { sv: 'Höftböjarsträck' }, video: 'https://drive.google.com/...', loop: false },
+    { id: 'ov-005', namn: { sv: 'Höftböjarsträck' }, video: '', loop: false }
   ],
   teman: [
     { key: 'light', namn: { sv: 'Ljust' }, las: true },
     { key: 'dark', namn: { sv: 'Mörkt' }, las: true },
     { key: 'auto', namn: { sv: 'Auto' }, las: true },
-    { key: 'pink', namn: { sv: 'Rosa' }, las: false },
+    { key: 'pink', namn: { sv: 'Rosa' }, las: false }
   ]
 };
 
-// ── Login ─────────────────────────────────
+function getSavedData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+  } catch (error) {
+    console.warn('Kunde inte spara admindata:', error);
+  }
+}
+
+function cloneMockData() {
+  return JSON.parse(JSON.stringify(MOCK_DATA));
+}
+
+function generateId(prefix = 'item') {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,5)}`;
+}
+
 document.getElementById('btn-login').addEventListener('click', login);
 document.getElementById('token-input').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+document.getElementById('btn-logout').addEventListener('click', logout);
+document.getElementById('sidebar-nav').addEventListener('click', e => {
+  const item = e.target.closest('[data-section]');
+  if (item) navigate(item.dataset.section);
+});
+document.getElementById('main-content').addEventListener('click', handleAction);
 
 function login() {
   const token = document.getElementById('token-input').value.trim();
   if (token.startsWith('ghp_') || token === 'demo') {
     state.token = token;
-    state.data = MOCK_DATA;
+    state.data = getSavedData() || cloneMockData();
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('app-shell').classList.remove('hidden');
     document.getElementById('sidebar-user').textContent = token === 'demo' ? 'Demo-läge' : 'AndyGymnastics';
@@ -205,18 +235,14 @@ function login() {
   }
 }
 
-document.getElementById('btn-logout').addEventListener('click', () => {
+function logout() {
   state.token = null;
+  state.section = 'oversikt';
+  state.subSection = null;
   document.getElementById('app-shell').classList.add('hidden');
   document.getElementById('login-page').classList.remove('hidden');
   document.getElementById('token-input').value = '';
-});
-
-// ── Navigation ────────────────────────────
-document.getElementById('sidebar-nav').addEventListener('click', e => {
-  const item = e.target.closest('[data-section]');
-  if (item) navigate(item.dataset.section);
-});
+}
 
 function navigate(section, sub = null) {
   state.section = section;
@@ -235,12 +261,10 @@ function renderSection() {
     case 'ovningar':   main.innerHTML = renderOvningar(); break;
     case 'teman':      main.innerHTML = renderTeman(); break;
   }
-  attachSectionEvents();
 }
 
-// ── Översikt ──────────────────────────────
 function renderOversikt() {
-  const { pass, ovningar, teman } = state.data;
+  const { pass, ovningar } = state.data;
   const pub = pass.filter(p => p.aktiv).length;
   return `
     <div class="page-header">
@@ -269,7 +293,6 @@ function statCard(icon, val, label, color) {
   return `<div class="stat-card"><div class="stat-icon">${icon}</div><div class="stat-val" style="${color ? `color:${color}` : ''}">${val}</div><div class="stat-label">${label}</div></div>`;
 }
 
-// ── Pass ──────────────────────────────────
 function renderPass() {
   const rows = state.data.pass.map(p => `
     <div class="tbl-row" style="grid-template-columns:2fr 1fr 1fr 1fr 90px 120px">
@@ -333,11 +356,16 @@ function renderPassDetail(passId) {
     </div>
     <div class="card" style="margin-bottom:16px">
       <div class="card-header">Passinformation</div>
-      <div style="padding:16px">
+      <div class="pass-detail-form" style="padding:16px">
         <div class="form-grid-3">
-          <div class="form-field"><label>Namn (sv)</label><input value="${pass.namn.sv}" /></div>
-          <div class="form-field"><label>Kategori</label><input value="${pass.kategori}" /></div>
-          <div class="form-field"><label>Nivå</label><input value="${pass.niva}" /></div>
+          <div class="form-field"><label>Namn (sv)</label><input class="pass-input-name" value="${pass.namn.sv}" /></div>
+          <div class="form-field"><label>Kategori</label><input class="pass-input-category" value="${pass.kategori}" /></div>
+          <div class="form-field"><label>Nivå</label><input class="pass-input-level" value="${pass.niva}" /></div>
+        </div>
+        <div class="form-grid-3" style="margin-top:12px">
+          <div class="form-field"><label>Tid (min)</label><input class="pass-input-time" type="number" value="${pass.tid}" /></div>
+          <div class="form-field"><label>Emoji</label><input class="pass-input-emoji" value="${pass.emoji}" maxlength="2" /></div>
+          <div></div>
         </div>
         <div style="margin-top:10px;text-align:right">
           <button class="btn btn-primary" data-action="save-pass-info">Spara</button>
@@ -353,7 +381,6 @@ function renderPassDetail(passId) {
   `;
 }
 
-// ── Övningsbibliotek ──────────────────────
 function renderOvningar() {
   const rows = state.data.ovningar.map(ov => `
     <div class="tbl-row" style="grid-template-columns:2fr 80px 1fr 100px">
@@ -381,7 +408,6 @@ function renderOvningar() {
   `;
 }
 
-// ── Teman ─────────────────────────────────
 function renderTeman() {
   const rows = state.data.teman.map(tema => `
     <div class="tbl-row" style="grid-template-columns:2fr 60px 1fr 120px">
@@ -409,11 +435,6 @@ function renderTeman() {
   `;
 }
 
-// ── Event delegation ──────────────────────
-function attachSectionEvents() {
-  document.getElementById('main-content').addEventListener('click', handleAction);
-}
-
 function handleAction(e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
@@ -423,27 +444,100 @@ function handleAction(e) {
     case 'new-pass':        showPassModal(); break;
     case 'edit-pass':       navigate('pass', el.dataset.id); break;
     case 'back-to-pass':    navigate('pass'); break;
-    case 'delete-pass':     showConfirmModal('Är du säker?', 'Passet och alla dess övningar tas bort permanent.', () => toast('Pass borttaget.')); break;
-    case 'toggle-pass-status': toast('Status uppdaterad och publicerad.'); break;
-    case 'save-pass-info':  toast('Passinformation sparad.'); break;
+    case 'delete-pass':     showConfirmModal('Är du säker?', 'Passet och alla dess övningar tas bort permanent.', () => deletePass(el.dataset.id)); break;
+    case 'toggle-pass-status': togglePassStatus(el.dataset.id); break;
+    case 'save-pass-info':  savePassInfo(); break;
     case 'add-ovning-to-pass': showAddOvningModal(); break;
     case 'new-ovning':      showOvningModal(); break;
     case 'edit-ovning':     showOvningModal(el.dataset.id); break;
-    case 'delete-ovning':   showConfirmModal('Ta bort övning?', 'Övningen tas bort från biblioteket och alla pass som använder den.', () => toast('Övning borttagen.')); break;
+    case 'edit-ovning-in-pass': {
+      const pass = state.data.pass.find(p => p.id === state.subSection);
+      const index = Number(el.dataset.index);
+      const ovningId = pass?.ovningar?.[index]?.ovningId;
+      if (ovningId) showOvningModal(ovningId);
+      break;
+    }
+    case 'remove-ovning-from-pass': {
+      const pass = state.data.pass.find(p => p.id === state.subSection);
+      const index = Number(el.dataset.index);
+      if (pass && pass.ovningar[index]) {
+        pass.ovningar.splice(index, 1);
+        saveData();
+        renderSection();
+        toast('Övning borttagen från passet.');
+      }
+      break;
+    }
+    case 'delete-ovning':   showConfirmModal('Ta bort övning?', 'Övningen tas bort från biblioteket och alla pass som använder den.', () => deleteOvning(el.dataset.id)); break;
     case 'new-tema':        showTemaModal(); break;
     case 'edit-tema':       showTemaModal(el.dataset.key); break;
-    case 'delete-tema':     showConfirmModal('Ta bort tema?', 'Temat tas bort. Användare som hade det aktivt återgår till Ljust.', () => toast('Tema borttaget.')); break;
+    case 'delete-tema':     showConfirmModal('Ta bort tema?', 'Temat tas bort. Användare som hade det aktivt återgår till Ljust.', () => deleteTema(el.dataset.key)); break;
   }
 }
 
-// ── Modals ────────────────────────────────
-function modal(content, sm = false) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.innerHTML = `<div class="modal${sm ? ' sm' : ''}">${content}</div>`;
-  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-  document.body.appendChild(overlay);
-  return overlay;
+function deletePass(id) {
+  state.data.pass = state.data.pass.filter(pass => pass.id !== id);
+  saveData();
+  if (state.subSection === id) state.subSection = null;
+  navigate('pass');
+  toast('Pass borttaget.');
+}
+
+function togglePassStatus(id) {
+  const pass = state.data.pass.find(p => p.id === id);
+  if (!pass) return;
+  pass.aktiv = !pass.aktiv;
+  saveData();
+  renderSection();
+  toast(pass.aktiv ? 'Passet är nu publicerat.' : 'Passet sparat som utkast.');
+}
+
+function savePassInfo() {
+  const pass = state.data.pass.find(p => p.id === state.subSection);
+  if (!pass) return;
+  const form = document.querySelector('.pass-detail-form');
+  if (!form) return;
+  const name = form.querySelector('.pass-input-name').value.trim();
+  const category = form.querySelector('.pass-input-category').value.trim();
+  const level = form.querySelector('.pass-input-level').value.trim();
+  const time = Number(form.querySelector('.pass-input-time').value);
+  const emoji = form.querySelector('.pass-input-emoji').value.trim();
+
+  if (name) pass.namn.sv = name;
+  if (category) pass.kategori = category;
+  if (level) pass.niva = level;
+  if (time > 0) pass.tid = time;
+  if (emoji) pass.emoji = emoji;
+
+  saveData();
+  renderSection();
+  toast('Passinformation sparad.');
+}
+
+function deleteOvning(id) {
+  state.data.ovningar = state.data.ovningar.filter(ov => ov.id !== id);
+  state.data.pass.forEach(pass => {
+    pass.ovningar = pass.ovningar.filter(item => item.ovningId !== id);
+  });
+  saveData();
+  renderSection();
+  toast('Övning borttagen.');
+}
+
+function deleteTema(key) {
+  state.data.teman = state.data.teman.filter(tema => tema.key !== key);
+  saveData();
+  renderSection();
+  toast('Tema borttaget.');
+}
+
+function addOvningToPass(passId, ovningId, value) {
+  const pass = state.data.pass.find(p => p.id === passId);
+  if (!pass) return;
+  pass.ovningar.push({ ovningId, varde: value });
+  saveData();
+  renderSection();
+  toast('Övning tillagd i passet.');
 }
 
 function showConfirmModal(title, body, onConfirm) {
@@ -466,17 +560,17 @@ function showPassModal() {
   const m = modal(`
     <div class="modal-title">Nytt pass</div>
     <div class="form-group">
-      <div class="form-field"><label>Namn (svenska)</label><input placeholder="T.ex. Ryggsträck" /></div>
+      <div class="form-field"><label>Namn (svenska)</label><input class="input-pass-name" placeholder="T.ex. Ryggsträck" /></div>
       <div class="form-grid-2">
         <div class="form-field"><label>Kategori</label>
-          <select><option>Rörlighet</option><option>Styrka</option></select>
+          <select class="input-pass-category"><option>Rörlighet</option><option>Styrka</option></select>
         </div>
         <div class="form-field"><label>Nivå</label>
-          <select><option>Lätt</option><option>Medel</option><option>Avancerad</option></select>
+          <select class="input-pass-level"><option>Lätt</option><option>Medel</option><option>Avancerad</option></select>
         </div>
       </div>
-      <div class="form-field"><label>Uppskattad tid (minuter)</label><input type="number" placeholder="10" /></div>
-      <div class="form-field"><label>Emoji</label><input placeholder="🙆" maxlength="2" /></div>
+      <div class="form-field"><label>Uppskattad tid (minuter)</label><input class="input-pass-time" type="number" placeholder="10" /></div>
+      <div class="form-field"><label>Emoji</label><input class="input-pass-emoji" placeholder="🙆" maxlength="2" /></div>
     </div>
     <div class="modal-btns">
       <button class="btn btn-secondary" id="m-cancel">Avbryt</button>
@@ -484,7 +578,35 @@ function showPassModal() {
     </div>
   `);
   m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
-  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast('Pass skapat som utkast.'); });
+  m.querySelector('#m-save').addEventListener('click', () => {
+    const name = m.querySelector('.input-pass-name').value.trim();
+    const category = m.querySelector('.input-pass-category').value.trim();
+    const level = m.querySelector('.input-pass-level').value.trim();
+    const time = Number(m.querySelector('.input-pass-time').value);
+    const emoji = m.querySelector('.input-pass-emoji').value.trim() || '🧘';
+
+    if (!name) {
+      toast('Ange ett namn för passet.');
+      return;
+    }
+
+    const newPass = {
+      id: generateId('pass'),
+      namn: { sv: name },
+      kategori: category || 'Rörlighet',
+      niva: level || 'Lätt',
+      tid: time > 0 ? time : 10,
+      emoji,
+      aktiv: false,
+      ovningar: []
+    };
+
+    state.data.pass.unshift(newPass);
+    saveData();
+    m.remove();
+    navigate('pass', newPass.id);
+    toast('Pass skapat som utkast.');
+  });
 }
 
 function showOvningModal(id = null) {
@@ -492,9 +614,9 @@ function showOvningModal(id = null) {
   const m = modal(`
     <div class="modal-title">${ov ? 'Redigera övning' : 'Ny övning'}</div>
     <div class="form-group">
-      <div class="form-field"><label>Namn (svenska)</label><input value="${ov?.namn.sv || ''}" placeholder="T.ex. Axelrullningar" /></div>
-      <div class="form-field"><label>Namn (engelska)</label><input value="${ov?.namn.en || ''}" placeholder="E.g. Shoulder Rolls" /></div>
-      <div class="form-field"><label>Video-URL (Google Drive)</label><input type="url" value="${ov?.video || ''}" placeholder="https://drive.google.com/file/d/..." /></div>
+      <div class="form-field"><label>Namn (svenska)</label><input class="input-ov-name-sv" value="${ov?.namn.sv || ''}" placeholder="T.ex. Axelrullningar" /></div>
+      <div class="form-field"><label>Namn (engelska)</label><input class="input-ov-name-en" value="${ov?.namn.en || ''}" placeholder="E.g. Shoulder Rolls" /></div>
+      <div class="form-field"><label>Video-URL (Google Drive)</label><input class="input-ov-video" type="url" value="${ov?.video || ''}" placeholder="https://drive.google.com/file/d/..." /></div>
       <div class="checkbox-row">
         <input type="checkbox" id="cb-loop" ${ov?.loop ? 'checked' : ''} />
         <label for="cb-loop">Repetera övningen (loop)</label>
@@ -506,16 +628,47 @@ function showOvningModal(id = null) {
     </div>
   `);
   m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
-  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast(ov ? 'Övning uppdaterad.' : 'Övning skapad.'); });
+  m.querySelector('#m-save').addEventListener('click', () => {
+    const nameSv = m.querySelector('.input-ov-name-sv').value.trim();
+    const nameEn = m.querySelector('.input-ov-name-en').value.trim();
+    const video = m.querySelector('.input-ov-video').value.trim();
+    const loop = m.querySelector('#cb-loop').checked;
+
+    if (!nameSv) {
+      toast('Ange ett svenskt namn för övningen.');
+      return;
+    }
+
+    if (ov) {
+      ov.namn.sv = nameSv;
+      ov.namn.en = nameEn;
+      ov.video = video;
+      ov.loop = loop;
+      saveData();
+      renderSection();
+      toast('Övning uppdaterad.');
+    } else {
+      state.data.ovningar.unshift({
+        id: generateId('ov'),
+        namn: { sv: nameSv, en: nameEn },
+        video,
+        loop
+      });
+      saveData();
+      renderSection();
+      toast('Övning skapad.');
+    }
+    m.remove();
+  });
 }
 
 function showAddOvningModal() {
-  const opts = state.data.ovningar.map(o => `<option value="${o.id}">${o.namn.sv}</option>`).join('');
+  const options = state.data.ovningar.map(o => `<option value="${o.id}">${o.namn.sv}</option>`).join('');
   const m = modal(`
     <div class="modal-title">Lägg till övning i pass</div>
     <div class="form-group">
-      <div class="form-field"><label>Välj övning</label><select>${opts}</select></div>
-      <div class="form-field"><label>Tid / Reps</label><input placeholder="T.ex. 1:00 eller 3 × 12 reps" /></div>
+      <div class="form-field"><label>Välj övning</label><select class="select-pass-ovning">${options}</select></div>
+      <div class="form-field"><label>Tid / Reps</label><input class="input-pass-ov-time" placeholder="T.ex. 1:00 eller 3 × 12 reps" /></div>
     </div>
     <div class="modal-btns">
       <button class="btn btn-secondary" id="m-cancel">Avbryt</button>
@@ -523,35 +676,84 @@ function showAddOvningModal() {
     </div>
   `);
   m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
-  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast('Övning tillagd i passet.'); });
+  m.querySelector('#m-save').addEventListener('click', () => {
+    const ovningId = m.querySelector('.select-pass-ovning').value;
+    const value = m.querySelector('.input-pass-ov-time').value.trim() || '1:00';
+    if (!state.subSection) return;
+    addOvningToPass(state.subSection, ovningId, value);
+    m.remove();
+  });
 }
 
 function showTemaModal(key = null) {
+  const tema = key ? state.data.teman.find(t => t.key === key) : null;
+  const colors = tema?.colors || { accent: '#2D6A4F', bg: '#FFFFFF', surface: '#FFFFFF', text: '#1A1A1A' };
   const m = modal(`
-    <div class="modal-title">${key ? 'Redigera tema' : 'Nytt tema'}</div>
+    <div class="modal-title">${tema ? 'Redigera tema' : 'Nytt tema'}</div>
     <div class="form-group">
-      <div class="form-field"><label>Namn (svenska)</label><input placeholder="T.ex. Höst" /></div>
-      <div class="form-field"><label>Namn (engelska)</label><input placeholder="E.g. Autumn" /></div>
-      ${['Accentfärg','Bakgrundsfärg','Ytfärg','Textfärg'].map(l => `
+      <div class="form-field"><label>Namn (svenska)</label><input class="input-tema-name-sv" value="${tema?.namn.sv || ''}" placeholder="T.ex. Höst" /></div>
+      <div class="form-field"><label>Namn (engelska)</label><input class="input-tema-name-en" value="${tema?.namn.en || ''}" placeholder="E.g. Autumn" /></div>
+      ${['Accentfärg','Bakgrundsfärg','Ytfärg','Textfärg'].map((label, index) => `
         <div class="color-row">
-          <label>${l}</label>
+          <label>${label}</label>
           <div class="color-inputs">
-            <input type="color" value="#2D6A4F" />
-            <input type="text" value="#2D6A4F" />
+            <input type="color" class="input-tema-color-${index}" value="${Object.values(colors)[index] || '#2D6A4F'}" />
+            <input type="text" class="input-tema-color-text-${index}" value="${Object.values(colors)[index] || '#2D6A4F'}" />
           </div>
         </div>
       `).join('')}
     </div>
     <div class="modal-btns">
       <button class="btn btn-secondary" id="m-cancel">Avbryt</button>
-      <button class="btn btn-primary" id="m-save">${key ? 'Spara ändringar' : 'Skapa tema'}</button>
+      <button class="btn btn-primary" id="m-save">${tema ? 'Spara ändringar' : 'Skapa tema'}</button>
     </div>
   `);
   m.querySelector('#m-cancel').addEventListener('click', () => m.remove());
-  m.querySelector('#m-save').addEventListener('click', () => { m.remove(); toast(key ? 'Tema uppdaterat.' : 'Tema skapat och tillgängligt i appen.'); });
+  m.querySelector('#m-save').addEventListener('click', () => {
+    const nameSv = m.querySelector('.input-tema-name-sv').value.trim();
+    const nameEn = m.querySelector('.input-tema-name-en').value.trim();
+    if (!nameSv) {
+      toast('Ange ett namn för temat.');
+      return;
+    }
+    const collectedColors = {
+      accent: m.querySelector('.input-tema-color-0').value,
+      bg: m.querySelector('.input-tema-color-1').value,
+      surface: m.querySelector('.input-tema-color-2').value,
+      text: m.querySelector('.input-tema-color-3').value
+    };
+
+    if (tema) {
+      tema.namn.sv = nameSv;
+      tema.namn.en = nameEn;
+      tema.colors = collectedColors;
+      saveData();
+      renderSection();
+      toast('Tema uppdaterat.');
+    } else {
+      state.data.teman.push({
+        key: generateId('tema'),
+        namn: { sv: nameSv, en: nameEn },
+        las: false,
+        colors: collectedColors
+      });
+      saveData();
+      renderSection();
+      toast('Tema skapat och tillgängligt i appen.');
+    }
+    m.remove();
+  });
 }
 
-// ── Toast ─────────────────────────────────
+function modal(content, sm = false) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal${sm ? ' sm' : ''}">${content}</div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
 function toast(msg) {
   const el = document.createElement('div');
   el.className = 'toast';

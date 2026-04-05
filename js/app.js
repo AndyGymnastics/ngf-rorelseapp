@@ -15,12 +15,12 @@ let currentParams = {};
 // ── Load data ─────────────────────────────
 async function loadData() {
   try {
-    const res = await fetch('/data/data.json');
+    const res = await fetch('data/data.json');
     if (!res.ok) throw new Error('Failed to load data');
     return await res.json();
   } catch (e) {
     // Try cache if offline
-    const cached = await caches.match('/data/data.json');
+    const cached = await caches.match('data/data.json');
     if (cached) return await cached.json();
     throw e;
   }
@@ -115,7 +115,7 @@ function setupOfflineBanner() {
 async function registerSW() {
   if ('serviceWorker' in navigator) {
     try {
-      await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.register('sw.js');
     } catch (e) {
       console.warn('SW registration failed:', e);
     }

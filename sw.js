@@ -1,19 +1,19 @@
 const CACHE_NAME = 'ngf-v1';
 const OFFLINE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/app.css',
-  '/js/app.js',
-  '/js/i18n.js',
-  '/js/store.js',
-  '/js/views/home.js',
-  '/js/views/workout.js',
-  '/js/views/exercise.js',
-  '/js/views/player.js',
-  '/js/views/myworkouts.js',
-  '/js/views/settings.js',
-  '/data/data.json'
+  './',
+  './index.html',
+  './manifest.json',
+  './css/app.css',
+  './js/app.js',
+  './js/i18n.js',
+  './js/store.js',
+  './js/views/home.js',
+  './js/views/workout.js',
+  './js/views/exercise.js',
+  './js/views/player.js',
+  './js/views/myworkouts.js',
+  './js/views/settings.js',
+  './data/data.json'
 ];
 
 // Install: cache all static assets
