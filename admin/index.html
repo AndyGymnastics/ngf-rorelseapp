@@ -165,28 +165,6 @@ let state = {
   data: null
 };
 
-const MOCK_DATA = {
-  pass: [
-    { id: 'pass-001', namn: { sv: 'Övre kropp – lossa upp' }, kategori: 'Rörlighet', niva: 'Lätt', tid: 10, emoji: '🙆', aktiv: true, ovningar: [{ ovningId: 'ov-001', varde: '1:00' }] },
-    { id: 'pass-002', namn: { sv: 'Höft & ben' }, kategori: 'Rörlighet', niva: 'Medel', tid: 15, emoji: '🦵', aktiv: true, ovningar: [] },
-    { id: 'pass-003', namn: { sv: 'Morgonväckare' }, kategori: 'Rörlighet', niva: 'Lätt', tid: 8, emoji: '🌅', aktiv: true, ovningar: [] },
-    { id: 'pass-004', namn: { sv: 'Axelstyrka' }, kategori: 'Styrka', niva: 'Medel', tid: 20, emoji: '💪', aktiv: false, ovningar: [] }
-  ],
-  ovningar: [
-    { id: 'ov-001', namn: { sv: 'Axelrullningar' }, video: 'https://drive.google.com/...', loop: true },
-    { id: 'ov-002', namn: { sv: 'Armsvingar' }, video: '', loop: false },
-    { id: 'ov-003', namn: { sv: 'Sidoböjning' }, video: 'https://drive.google.com/...', loop: true },
-    { id: 'ov-004', namn: { sv: 'Bröstöppnare' }, video: '', loop: false },
-    { id: 'ov-005', namn: { sv: 'Höftböjarsträck' }, video: '', loop: false }
-  ],
-  teman: [
-    { key: 'light', namn: { sv: 'Ljust' }, las: true },
-    { key: 'dark', namn: { sv: 'Mörkt' }, las: true },
-    { key: 'auto', namn: { sv: 'Auto' }, las: true },
-    { key: 'pink', namn: { sv: 'Rosa' }, las: false }
-  ]
-};
-
 function getSavedData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -281,10 +259,6 @@ async function saveData() {
   }
 }
 
-function cloneMockData() {
-  return JSON.parse(JSON.stringify(MOCK_DATA));
-}
-
 function generateId(prefix = 'item') {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,5)}`;
 }
@@ -314,8 +288,8 @@ async function login() {
       state.data = data;
     } catch (e) {
       console.error('❌ Failed to load GitHub data:', e.message);
-      console.log('Using mock data');
-      state.data = cloneMockData();
+      showToast('Kunde inte ladda data från GitHub. Kontrollera din internetanslutning.', 'error');
+      return; // Don't proceed with login
     }
     
     document.getElementById('login-page').classList.add('hidden');

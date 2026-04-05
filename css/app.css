@@ -45,24 +45,6 @@ input, textarea { font-family: inherit; }
   --danger:       #EF5350;
 }
 
-/* ── Theme: Auto (follows system) ──────── */
-@media (prefers-color-scheme: dark) {
-  [data-theme="auto"] {
-    --bg:           #111110;
-    --surface:      #1C1C1B;
-    --surface-alt:  #252523;
-    --text:         #F0EDE8;
-    --text-muted:   #8A8880;
-    --accent:       #4A9E7A;
-    --accent-text:  #FFFFFF;
-    --border:       #2E2D2B;
-    --shadow:       0 2px 16px rgba(0,0,0,0.5);
-    --pill:         #1E3D30;
-    --pill-text:    #4A9E7A;
-    --danger:       #EF5350;
-  }
-}
-
 /* ── Theme: Pink ────────────────────────── */
 [data-theme="pink"] {
   --bg:           #FFF0F5;
