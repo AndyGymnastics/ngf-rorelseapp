@@ -9,7 +9,7 @@
       "niva": "Lätt",
       "tid": 5,
       "emoji": "🧘",
-      "aktiv": true,
+      "aktiv": false,
       "ovningar": [
         {
           "ovningId": "ov-001",
