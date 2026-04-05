@@ -1,6 +1,18 @@
 {
   "pass": [
     {
+      "id": "pass-mnlwxxfi-y10",
+      "namn": {
+        "sv": "Test 3"
+      },
+      "kategori": "Rörlighet",
+      "niva": "Lätt",
+      "tid": 8,
+      "emoji": "🧘",
+      "aktiv": false,
+      "ovningar": []
+    },
+    {
       "id": "pass-001",
       "namn": {
         "sv": "Övre kropp – lossa upp"
