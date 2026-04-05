@@ -68,7 +68,7 @@ export function renderExercise(data, params, navigate) {
   return view;
 }
 
-function driveToEmbed(url) {
+export function driveToEmbed(url) {
   // Handle different Google Drive URL formats
   const idMatch = url.match(/[-\w]{25,}/);
   if (!idMatch) return url;
