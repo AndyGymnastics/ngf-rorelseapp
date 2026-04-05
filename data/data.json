@@ -1,166 +1,72 @@
 {
-  "version": 1,
-  "ovningar": [
-    {
-      "id": "ov-001",
-      "namn": { "sv": "Axelrullningar", "en": "Shoulder Rolls" },
-      "beskrivning": { "sv": "Rulla axlarna mjukt bakåt och framåt.", "en": "Gently roll shoulders backward and forward." },
-      "video": "",
-      "loop": true
-    },
-    {
-      "id": "ov-002",
-      "namn": { "sv": "Armsvingar", "en": "Arm Swings" },
-      "beskrivning": { "sv": "Sväng armarna framåt och bakåt i en kontrollerad rörelse.", "en": "Swing arms forward and backward in a controlled motion." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-003",
-      "namn": { "sv": "Sidoböjning", "en": "Side Bend" },
-      "beskrivning": { "sv": "Böj kroppen åt sidan och håll positionen.", "en": "Bend sideways and hold the position." },
-      "video": "",
-      "loop": true
-    },
-    {
-      "id": "ov-004",
-      "namn": { "sv": "Bröstöppnare", "en": "Chest Opener" },
-      "beskrivning": { "sv": "Öppna bröstet genom att föra armarna bakåt.", "en": "Open the chest by drawing arms backward." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-005",
-      "namn": { "sv": "Nackrullningar", "en": "Neck Rolls" },
-      "beskrivning": { "sv": "Rulla nacken försiktigt från sida till sida.", "en": "Gently roll the neck from side to side." },
-      "video": "",
-      "loop": true
-    },
-    {
-      "id": "ov-006",
-      "namn": { "sv": "Höftböjarsträck", "en": "Hip Flexor Stretch" },
-      "beskrivning": { "sv": "Sträck höftböjaren i ett utfallssteg.", "en": "Stretch the hip flexor in a lunge position." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-007",
-      "namn": { "sv": "Fjärilsträck", "en": "Butterfly Stretch" },
-      "beskrivning": { "sv": "Sitt med fotsulorna mot varandra och pressa knäna mot golvet.", "en": "Sit with soles together and press knees toward the floor." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-008",
-      "namn": { "sv": "Pigeon pose", "en": "Pigeon Pose" },
-      "beskrivning": { "sv": "Djup höftsträck i pigeon-positionen.", "en": "Deep hip stretch in pigeon position." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-009",
-      "namn": { "sv": "Kattko", "en": "Cat-Cow" },
-      "beskrivning": { "sv": "Växla mellan att välva och runda ryggen på alla fyra.", "en": "Alternate between arching and rounding the back on all fours." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-010",
-      "namn": { "sv": "Barnets position", "en": "Child's Pose" },
-      "beskrivning": { "sv": "Sträck ut ryggen i barnets position.", "en": "Stretch the back in child's pose." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-011",
-      "namn": { "sv": "Bandrotation extern", "en": "Band External Rotation" },
-      "beskrivning": { "sv": "Rotera axeln utåt med motstånd från band.", "en": "Rotate shoulder outward with band resistance." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-012",
-      "namn": { "sv": "Axelpress", "en": "Shoulder Press" },
-      "beskrivning": { "sv": "Pressa vikten uppåt med kontrollerad rörelse.", "en": "Press weight upward with controlled movement." },
-      "video": "",
-      "loop": false
-    },
-    {
-      "id": "ov-013",
-      "namn": { "sv": "Facepull", "en": "Face Pull" },
-      "beskrivning": { "sv": "Dra mot ansiktet med band för bakre deltastyrka.", "en": "Pull toward face with band for rear delt strength." },
-      "video": "",
-      "loop": false
-    }
-  ],
   "pass": [
     {
+      "id": "pass-mnlvolsx-xrd",
+      "namn": {
+        "sv": "test 2"
+      },
+      "kategori": "Rörlighet",
+      "niva": "Lätt",
+      "tid": 5,
+      "emoji": "🧘",
+      "aktiv": true,
+      "ovningar": [
+        {
+          "ovningId": "ov-001",
+          "varde": "1:00"
+        }
+      ]
+    },
+    {
       "id": "pass-001",
-      "namn": { "sv": "Övre kropp – lossa upp", "en": "Upper Body Warm-Up" },
-      "beskrivning": { "sv": "Kort rutin för nacke, axlar och övre rygg med stående och sittande stretchövningar.", "en": "Short routine for neck, shoulders and upper back with standing and seated stretches." },
+      "namn": {
+        "sv": "Övre kropp – lossa upp"
+      },
       "kategori": "Rörlighet",
       "niva": "Lätt",
       "tid": 10,
       "emoji": "🙆",
       "aktiv": true,
       "ovningar": [
-        { "ovningId": "ov-001", "varde": "1:00" },
-        { "ovningId": "ov-002", "varde": "0:30" },
-        { "ovningId": "ov-003", "varde": "1:00" },
-        { "ovningId": "ov-004", "varde": "0:30" },
-        { "ovningId": "ov-005", "varde": "1:00" }
-      ]
-    },
-    {
-      "id": "pass-002",
-      "namn": { "sv": "Höft & ben", "en": "Hip & Legs" },
-      "beskrivning": { "sv": "Djupgående mobilitet för höfter, ljumsk och hamstrings. Passar efter långt stillasittande.", "en": "Deep mobility for hips, groin and hamstrings. Great after prolonged sitting." },
-      "kategori": "Rörlighetk",
-      "niva": "Medel",
-      "tid": 15,
-      "emoji": "🦵",
-      "aktiv": true,
-      "ovningar": [
-        { "ovningId": "ov-006", "varde": "1:30" },
-        { "ovningId": "ov-007", "varde": "1:00" },
-        { "ovningId": "ov-008", "varde": "2:00" }
-      ]
-    },
-    {
-      "id": "pass-003",
-      "namn": { "sv": "Morgonväckare", "en": "Morning Starter" },
-      "beskrivning": { "sv": "Mjuk helkroppsrutin för att sätta igång kroppen på morgonen.", "en": "Gentle full-body routine to get the body going in the morning." },
-      "kategori": "Rörlighet",
-      "niva": "Lätt",
-      "tid": 8,
-      "emoji": "🌅",
-      "aktiv": true,
-      "ovningar": [
-        { "ovningId": "ov-009", "varde": "10 reps" },
-        { "ovningId": "ov-010", "varde": "1:00" }
-      ]
-    },
-    {
-      "id": "pass-004",
-      "namn": { "sv": "Axelstyrka", "en": "Shoulder Strength" },
-      "beskrivning": { "sv": "Progressiv axelstyrka med fokus på stabilitet och kontrollerad rörelse.", "en": "Progressive shoulder strength focused on stability and controlled movement." },
-      "kategori": "Styrka",
-      "niva": "Medel",
-      "tid": 20,
-      "emoji": "💪",
-      "aktiv": true,
-      "ovningar": [
-        { "ovningId": "ov-011", "varde": "3 × 12 reps" },
-        { "ovningId": "ov-012", "varde": "3 × 10 reps" },
-        { "ovningId": "ov-013", "varde": "3 × 15 reps" }
+        {
+          "ovningId": "ov-001",
+          "varde": "1:00"
+        }
       ]
     }
   ],
-  "teman": [
-    { "key": "light", "namn": { "sv": "Ljust", "en": "Light" }, "las": true },
-    { "key": "dark", "namn": { "sv": "Mörkt", "en": "Dark" }, "las": true },
-    { "key": "auto", "namn": { "sv": "Auto", "en": "Auto" }, "las": true },
-    { "key": "pink", "namn": { "sv": "Rosa", "en": "Pink" }, "las": false }
+  "ovningar": [
+    {
+      "id": "ov-001",
+      "namn": {
+        "sv": "Axelrullningar",
+        "en": "Shoulder Rolls"
+      },
+      "video": "https://drive.google.com/file/d/1i6FFSE9yIO81gPyDx1zrmnKw5R0JOqMH/view?usp=sharing",
+      "loop": true
+    }
   ],
-  "sprak": ["sv", "en"]
+  "teman": [
+    {
+      "key": "light",
+      "namn": {
+        "sv": "Ljust"
+      },
+      "las": true
+    },
+    {
+      "key": "dark",
+      "namn": {
+        "sv": "Mörkt"
+      },
+      "las": true
+    },
+    {
+      "key": "auto",
+      "namn": {
+        "sv": "Auto"
+      },
+      "las": true
+    }
+  ]
 }
