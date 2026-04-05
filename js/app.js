@@ -16,9 +16,17 @@ let currentParams = {};
 async function loadData() {
   try {
     // Always fetch from GitHub Pages to see live admin changes
+    console.log('🔄 App: Loading data from GitHub...');
     const res = await fetch('https://andygymnastics.github.io/ngf-rorelseapp/data/data.json');
     if (!res.ok) throw new Error('Failed to load data');
-    return await res.json();
+    const data = await res.json();
+    console.log('✅ App: Loaded data:', { 
+      pass: data.pass?.length || 0, 
+      ovningar: data.ovningar?.length || 0,
+      teman: data.teman?.length || 0,
+      passSample: data.pass?.[0] 
+    });
+    return data;
   } catch (e) {
     // Fallback to local data.json if offline or GitHub is down
     console.warn('Failed to load from GitHub, trying local:', e);

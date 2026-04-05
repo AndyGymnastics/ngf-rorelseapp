@@ -6,8 +6,8 @@ export function renderHome(data, navigate) {
   const lang = prefs.lang;
 
   // Group passes by category, only active passes
-  const activePasses = data.pass.filter(p => p.aktiv);
-  const categories = [...new Set(activePasses.map(p => p.kategori))];
+  const activePasses = (data.pass || []).filter(p => p && p.aktiv);
+  const categories = [...new Set(activePasses.map(p => p && p.kategori).filter(Boolean))];
 
   const view = document.createElement('div');
   view.className = 'view';
@@ -66,18 +66,18 @@ export function buildPassCard(pass, lang, data, navigate, showFav = true) {
   card.className = 'card';
 
   const fav = isFavorite(pass.id);
-  const namn = pass.namn[lang] || pass.namn.sv;
-  const desc = pass.beskrivning[lang] || pass.beskrivning.sv;
+  const namn = (pass.namn && (pass.namn[lang] || pass.namn.sv)) || 'Unnamed Pass';
+  const desc = (pass.beskrivning && (pass.beskrivning[lang] || pass.beskrivning.sv)) || '';
 
   card.innerHTML = `
     <div class="pass-card">
       <div class="pass-card-left">
-        <span class="pass-emoji">${pass.emoji}</span>
+        <span class="pass-emoji">${pass.emoji || '📋'}</span>
         <div>
           <div class="pass-name">${namn}</div>
           <div class="badges">
-            <span class="badge badge-muted">${pass.kategori}</span>
-            <span class="badge badge-accent">${pass.niva}</span>
+            <span class="badge badge-muted">${pass.kategori || 'Unknown'}</span>
+            <span class="badge badge-accent">${pass.niva || 'Unknown'}</span>
           </div>
           <div class="pass-desc">${desc}</div>
         </div>
