@@ -196,9 +196,70 @@ function getSavedData() {
   }
 }
 
-function saveData() {
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  if (type === 'error') toast.style.background = '#D32F2F';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+async function fetchFileSHA() {
+  try {
+    const res = await fetch('https://api.github.com/repos/andygymnastics/ngf-rorelseapp/contents/data/data.json', {
+      headers: { 'Authorization': `token ${state.token}` }
+    });
+    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+    const data = await res.json();
+    return data.sha;
+  } catch (error) {
+    console.error('Failed to fetch file SHA:', error);
+    throw error;
+  }
+}
+
+async function pushToGitHub(dataToSave) {
+  if (!state.token || state.token === 'demo') {
+    console.log('Demo mode: skipping GitHub push');
+    return;
+  }
+
+  try {
+    showToast('💾 Sparar till GitHub...');
+    const sha = await fetchFileSHA();
+    const content = btoa(JSON.stringify(dataToSave, null, 2));
+    
+    const res = await fetch('https://api.github.com/repos/andygymnastics/ngf-rorelseapp/contents/data/data.json', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${state.token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: '📝 Admin update: ' + new Date().toLocaleString('sv-SE'),
+        content: content,
+        sha: sha
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || `GitHub API error: ${res.status}`);
+    }
+
+    console.log('✅ Data pushed to GitHub');
+    showToast('✅ Ändringar sparade till GitHub!');
+  } catch (error) {
+    console.error('GitHub push failed:', error);
+    showToast(`❌ Kunde inte spara: ${error.message}`, 'error');
+  }
+}
+
+async function saveData() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
+    await pushToGitHub(state.data);
   } catch (error) {
     console.warn('Kunde inte spara admindata:', error);
   }

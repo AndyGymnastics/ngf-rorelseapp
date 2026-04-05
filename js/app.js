@@ -38,6 +38,8 @@ function renderView() {
   const prefs = getPrefs();
   const lang = prefs.lang;
 
+  console.log('📍 renderView called, currentView:', currentView);
+
   // Apply theme
   document.documentElement.setAttribute('data-theme', prefs.theme);
 
@@ -70,8 +72,20 @@ function renderView() {
     default:         viewEl = renderHome(appData, navigate);
   }
 
+  if (!viewEl) {
+    console.error('❌ View is null/undefined');
+    return;
+  }
+
+  console.log('✨ View created:', viewEl.className, viewEl.id);
+  
   // Insert before nav
-  app.insertBefore(viewEl, nav);
+  try {
+    app.insertBefore(viewEl, nav);
+    console.log('✅ View inserted into DOM');
+  } catch (err) {
+    console.error('❌ Failed to insert view:', err);
+  }
 }
 
 // ── Build nav ─────────────────────────────
@@ -124,22 +138,28 @@ async function registerSW() {
 
 // ── Init ──────────────────────────────────
 async function init() {
+  console.log('🚀 App init started');
   try {
     appData = await loadData();
+    console.log('✅ Data loaded:', { passCount: appData.pass.length, ovningarCount: appData.ovningar.length });
   } catch (e) {
+    console.error('❌ Failed to load data:', e);
     document.getElementById('app').innerHTML = `
       <div style="padding:32px;text-align:center;color:#6B6860">
         <div style="font-size:2rem;margin-bottom:12px">⚠️</div>
         <div style="font-weight:700;margin-bottom:8px">Kunde inte ladda data</div>
         <div style="font-size:0.85rem">Kontrollera din internetanslutning och försök igen.</div>
+        <div style="font-size:0.75rem;margin-top:12px;color:#999">${e.message}</div>
       </div>
     `;
     return;
   }
 
+  console.log('🎨 Building UI...');
   buildNav();
   setupOfflineBanner();
   renderView();
+  console.log('✅ UI rendered');
   await registerSW();
 }
 
