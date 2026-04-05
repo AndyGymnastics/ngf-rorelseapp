@@ -59,15 +59,17 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Cache-first for everything else
-  event.respondWith(
-    caches.match(event.request)
-      .then(cached => cached || fetch(event.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-      )
-  );
+  // Cache-first for everything else (but not chrome extensions)
+  if (!event.request.url.startsWith('chrome-extension://')) {
+    event.respondWith(
+      caches.match(event.request)
+        .then(cached => cached || fetch(event.request)
+          .then(response => {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+            return response;
+          })
+        )
+    );
+  }
 });

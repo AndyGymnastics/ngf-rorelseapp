@@ -15,14 +15,21 @@ let currentParams = {};
 // ── Load data ─────────────────────────────
 async function loadData() {
   try {
-    const res = await fetch('data/data.json');
+    // Always fetch from GitHub Pages to see live admin changes
+    const res = await fetch('https://andygymnastics.github.io/ngf-rorelseapp/data/data.json');
     if (!res.ok) throw new Error('Failed to load data');
     return await res.json();
   } catch (e) {
-    // Try cache if offline
-    const cached = await caches.match('data/data.json');
-    if (cached) return await cached.json();
-    throw e;
+    // Fallback to local data.json if offline or GitHub is down
+    console.warn('Failed to load from GitHub, trying local:', e);
+    try {
+      const res = await fetch('data/data.json');
+      if (!res.ok) throw new Error('Failed to load local data');
+      return await res.json();
+    } catch (localError) {
+      console.error('Failed to load data:', localError);
+      throw localError;
+    }
   }
 }
 

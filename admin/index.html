@@ -210,7 +210,10 @@ async function fetchFileSHA() {
     const res = await fetch('https://api.github.com/repos/andygymnastics/ngf-rorelseapp/contents/data/data.json', {
       headers: { 'Authorization': `token ${state.token}` }
     });
-    if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`GitHub API error: ${res.status} - ${errText}`);
+    }
     const data = await res.json();
     return data.sha;
   } catch (error) {
@@ -220,6 +223,7 @@ async function fetchFileSHA() {
 }
 
 async function pushToGitHub(dataToSave) {
+  console.log('🔄 Attempting GitHub push...', { token: state.token ? 'present' : 'missing', isDemo: state.token === 'demo' });
   if (!state.token || state.token === 'demo') {
     console.log('Demo mode: skipping GitHub push');
     return;
@@ -227,34 +231,47 @@ async function pushToGitHub(dataToSave) {
 
   try {
     showToast('💾 Sparar till GitHub...');
+    console.log('Fetching SHA...');
     const sha = await fetchFileSHA();
+    console.log('SHA fetched');
+
     // Properly encode UTF-8 to base64 (handles Swedish characters ö, ä, å)
     const jsonString = JSON.stringify(dataToSave, null, 2);
-    const utf8Bytes = new TextEncoder().encode(jsonString);
-    const content = btoa(String.fromCharCode.apply(null, utf8Bytes));
     
+    // Use a proper UTF-8 to base64 conversion
+    function utf8ToBase64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+    const content = utf8ToBase64(jsonString);
+
+    const pushData = {
+      message: '📝 Admin update: ' + new Date().toLocaleString('sv-SE'),
+      content: content,
+      sha: sha
+    };
+
     const res = await fetch('https://api.github.com/repos/andygymnastics/ngf-rorelseapp/contents/data/data.json', {
       method: 'PUT',
       headers: {
         'Authorization': `token ${state.token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        message: '📝 Admin update: ' + new Date().toLocaleString('sv-SE'),
-        content: content,
-        sha: sha
-      })
+      body: JSON.stringify(pushData)
     });
+
+    console.log('GitHub API response:', res.status);
 
     if (!res.ok) {
       const err = await res.json();
+      console.error('GitHub API error:', err);
       throw new Error(err.message || `GitHub API error: ${res.status}`);
     }
 
-    console.log('✅ Data pushed to GitHub');
+    const result = await res.json();
+    console.log('✅ GitHub push successful');
     showToast('✅ Ändringar sparade till GitHub!');
   } catch (error) {
-    console.error('GitHub push failed:', error);
+    console.error('❌ GitHub push failed:', error);
     showToast(`❌ Kunde inte spara: ${error.message}`, 'error');
   }
 }
@@ -306,7 +323,9 @@ async function login() {
     
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('app-shell').classList.remove('hidden');
-    document.getElementById('sidebar-user').textContent = token === 'demo' ? 'Demo-läge' : 'AndyGymnastics';
+    const userDisplay = token === 'demo' ? 'Demo-läge (ändringar sparas inte)' : 'AndyGymnastics';
+    document.getElementById('sidebar-user').textContent = userDisplay;
+    console.log('🔑 Logged in with token type:', token === 'demo' ? 'DEMO' : 'REAL');
     navigate('oversikt');
   } else {
     document.getElementById('token-error').classList.remove('hidden');
@@ -703,7 +722,6 @@ function showPassModal() {
 
 function showOvningModal(id = null) {
   const ov = id ? state.data.ovningar.find(o => o.id === id) : null;
-  console.log('Opening ovning modal for:', id, 'found:', !!ov, 'name:', ov?.namn?.sv);
   const m = modal(`
     <div class="modal-title">${ov ? 'Redigera övning' : 'Ny övning'}</div>
     <div class="form-group">
