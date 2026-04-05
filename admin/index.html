@@ -228,7 +228,10 @@ async function pushToGitHub(dataToSave) {
   try {
     showToast('💾 Sparar till GitHub...');
     const sha = await fetchFileSHA();
-    const content = btoa(JSON.stringify(dataToSave, null, 2));
+    // Properly encode UTF-8 to base64 (handles Swedish characters ö, ä, å)
+    const jsonString = JSON.stringify(dataToSave, null, 2);
+    const utf8Bytes = new TextEncoder().encode(jsonString);
+    const content = btoa(String.fromCharCode.apply(null, utf8Bytes));
     
     const res = await fetch('https://api.github.com/repos/andygymnastics/ngf-rorelseapp/contents/data/data.json', {
       method: 'PUT',
@@ -282,11 +285,22 @@ document.getElementById('sidebar-nav').addEventListener('click', e => {
 });
 document.getElementById('main-content').addEventListener('click', handleAction);
 
-function login() {
+async function login() {
   const token = document.getElementById('token-input').value.trim();
   if (token.startsWith('ghp_') || token === 'demo') {
     state.token = token;
-    state.data = getSavedData() || cloneMockData();
+    
+    // Load actual data.json from server to sync with what users see
+    try {
+      const res = await fetch('../data/data.json');
+      if (!res.ok) throw new Error('Failed to load data.json');
+      state.data = await res.json();
+      console.log('✅ Loaded data from server');
+    } catch (e) {
+      console.warn('Failed to load from server, using cached/mock:', e);
+      state.data = getSavedData() || cloneMockData();
+    }
+    
     document.getElementById('login-page').classList.add('hidden');
     document.getElementById('app-shell').classList.remove('hidden');
     document.getElementById('sidebar-user').textContent = token === 'demo' ? 'Demo-läge' : 'AndyGymnastics';
