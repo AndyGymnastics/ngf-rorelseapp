@@ -162,10 +162,14 @@ function buildDropdown(options, current, onChange) {
     arrow.classList.toggle('open', !isOpen);
   });
 
-  document.addEventListener('click', () => {
-    menu.classList.add('hidden');
-    arrow.classList.remove('open');
-  }, { once: false });
+  menu.addEventListener('click', e => e.stopPropagation());
+
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) {
+      menu.classList.add('hidden');
+      arrow.classList.remove('open');
+    }
+  });
 
   return wrap;
 }

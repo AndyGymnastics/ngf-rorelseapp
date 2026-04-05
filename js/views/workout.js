@@ -5,13 +5,16 @@ export function renderWorkout(data, params, navigate) {
   const prefs = getPrefs();
   const lang = prefs.lang;
   const pass = data.pass.find(p => p.id === params.passId);
-  if (!pass) return navigate('home');
+  if (!pass) {
+    console.warn('Workout render: pass not found for', params.passId);
+    return navigate('home');
+  }
 
   const view = document.createElement('div');
   view.className = 'view';
 
-  const namn = pass.namn[lang] || pass.namn.sv;
-  const desc = pass.beskrivning[lang] || pass.beskrivning.sv;
+  const namn = (pass.namn && (pass.namn[lang] || pass.namn.sv)) || pass.id || 'Pass';
+  const desc = (pass.beskrivning && (pass.beskrivning[lang] || pass.beskrivning.sv)) || '';
   const fav = isFavorite(pass.id);
 
   // Header
@@ -56,12 +59,12 @@ export function renderWorkout(data, params, navigate) {
   view.appendChild(secLabel);
 
   // Exercise list
-  pass.ovningar.forEach((item, i) => {
+  (pass.ovningar || []).forEach((item, i) => {
     const ovning = data.ovningar.find(o => o.id === item.ovningId);
     if (!ovning) return;
     const row = document.createElement('div');
     row.className = 'exercise-row';
-    const namn = ovning.namn[lang] || ovning.namn.sv;
+    const namn = (ovning.namn && (ovning.namn[lang] || ovning.namn.sv)) || item.ovningId;
     row.innerHTML = `
       <div class="exercise-num">${i + 1}</div>
       <div>
