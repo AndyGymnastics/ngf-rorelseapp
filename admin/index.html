@@ -679,7 +679,7 @@ function showPassModal() {
       niva: level || 'Lätt',
       tid: time > 0 ? time : 10,
       emoji,
-      aktiv: false,
+      aktiv: true,
       ovningar: []
     };
 
@@ -687,7 +687,7 @@ function showPassModal() {
     saveData();
     m.remove();
     navigate('pass', newPass.id);
-    toast('Pass skapat som utkast.');
+    toast('Pass skapat och publicerat.');
   });
 }
 
