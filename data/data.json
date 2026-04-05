@@ -1,23 +1,6 @@
 {
   "pass": [
     {
-      "id": "pass-mnlvolsx-xrd",
-      "namn": {
-        "sv": "test 2"
-      },
-      "kategori": "Rörlighet",
-      "niva": "Lätt",
-      "tid": 5,
-      "emoji": "🧘",
-      "aktiv": true,
-      "ovningar": [
-        {
-          "ovningId": "ov-001",
-          "varde": "1:00"
-        }
-      ]
-    },
-    {
       "id": "pass-001",
       "namn": {
         "sv": "Övre kropp – lossa upp"
